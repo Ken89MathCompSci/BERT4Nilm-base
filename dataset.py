@@ -231,7 +231,7 @@ class REDD_LF_Dataset(AbstractDataset):
                         house_data, temp_data, how='inner', on=0)
 
                 # Convert timestamp column to datetime with proper handling
-                house_data.iloc[:, 0] = pd.to_datetime(house_data.iloc[:, 0], unit='s')
+                house_data[0] = pd.to_datetime(house_data[0], unit='s')
                 house_data.columns = ['time', 'aggregate'] + \
                     [i for i in self.appliance_names]
                 house_data = house_data.set_index('time')
@@ -249,7 +249,7 @@ class REDD_LF_Dataset(AbstractDataset):
             entire_data = entire_data.clip(
                 [0] * len(entire_data.columns), self.cutoff, axis=1)
 
-            return entire_data.values[:, 0], entire_data.values[:, 1:]
+            return entire_data.values[:, 0].astype(np.float32), entire_data.values[:, 1:].astype(np.float32)
 
 
 class UK_DALE_Dataset(AbstractDataset):
@@ -292,7 +292,7 @@ class UK_DALE_Dataset(AbstractDataset):
                 house_data = pd.read_csv(house_folder.joinpath(
                     'channel_1.dat'), sep=' ', header=None)
                 # Convert timestamp column to datetime with proper handling
-                house_data.iloc[:, 0] = pd.to_datetime(house_data.iloc[:, 0], unit='s')
+                house_data[0] = pd.to_datetime(house_data[0], unit='s')
                 house_data.columns = ['time', 'aggregate']
                 house_data = house_data.set_index('time')
                 house_data = house_data.resample(self.sampling).mean().ffill(limit=30)
@@ -342,4 +342,4 @@ class UK_DALE_Dataset(AbstractDataset):
             entire_data = entire_data.clip(
                 [0] * len(entire_data.columns), self.cutoff, axis=1)
             
-        return entire_data.values[:, 0], entire_data.values[:, 1:]
+        return entire_data.values[:, 0].astype(np.float32), entire_data.values[:, 1:].astype(np.float32)
