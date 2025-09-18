@@ -100,7 +100,7 @@ class Trainer(metaclass=ABCMeta):
             mse_loss = self.mse(logits.contiguous().view(-1),
                 labels.contiguous().view(-1))
             margin_loss = self.margin((logits_status * 2 - 1).contiguous().view(-1),
-                (status * 2 - 1).contiguous().view(-1))
+                (status * 2 - 1).contiguous().view(-1).long())
             total_loss = kl_loss + mse_loss + margin_loss
             
             on_mask = ((status == 1) + (status != logits_status.reshape(status.shape))) >= 1
@@ -146,7 +146,7 @@ class Trainer(metaclass=ABCMeta):
             mse_loss = self.mse(logits_masked.contiguous().view(-1),
                 labels_masked.contiguous().view(-1))
             margin_loss = self.margin((logits_status_masked * 2 - 1).contiguous().view(-1),
-                (status_masked * 2 - 1).contiguous().view(-1))
+                (status_masked * 2 - 1).contiguous().view(-1).long())
             total_loss = kl_loss + mse_loss + margin_loss
             
             on_mask = (status >= 0) * (((status == 1) + (status != logits_status.reshape(status.shape))) >= 1)
