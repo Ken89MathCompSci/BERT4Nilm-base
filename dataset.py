@@ -231,7 +231,7 @@ class REDD_LF_Dataset(AbstractDataset):
                         house_data, temp_data, how='inner', on=0)
 
                 # Convert timestamp column to datetime with proper handling
-                house_data.iloc[:, 0] = pd.to_datetime(house_data.iloc[:, 0], errors='coerce')
+                house_data.iloc[:, 0] = pd.to_datetime(house_data.iloc[:, 0], unit='s')
                 house_data.columns = ['time', 'aggregate'] + \
                     [i for i in self.appliance_names]
                 house_data = house_data.set_index('time')
@@ -292,7 +292,7 @@ class UK_DALE_Dataset(AbstractDataset):
                 house_data = pd.read_csv(house_folder.joinpath(
                     'channel_1.dat'), sep=' ', header=None)
                 # Convert timestamp column to datetime with proper handling
-                house_data.iloc[:, 0] = pd.to_datetime(house_data.iloc[:, 0], errors='coerce')
+                house_data.iloc[:, 0] = pd.to_datetime(house_data.iloc[:, 0], unit='s')
                 house_data.columns = ['time', 'aggregate']
                 house_data = house_data.set_index('time')
                 house_data = house_data.resample(self.sampling).mean().ffill(limit=30)
