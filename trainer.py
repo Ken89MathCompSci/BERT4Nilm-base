@@ -99,8 +99,8 @@ class Trainer(metaclass=ABCMeta):
             kl_loss = self.kl(torch.log(F.softmax(logits.squeeze() / 0.1, dim=-1) + 1e-9), F.softmax(labels.squeeze() / 0.1, dim=-1))
             mse_loss = self.mse(logits.contiguous().view(-1),
                 labels.contiguous().view(-1))
-            margin_loss = self.margin((logits_status * 2 - 1).contiguous().view(-1),
-                (status * 2 - 1).contiguous().view(-1).long())
+            margin_loss = self.margin((logits_status * 2 - 1).contiguous().view(-1).float(),
+                (status * 2 - 1).contiguous().view(-1).float())
             total_loss = kl_loss + mse_loss + margin_loss
             
             on_mask = ((status == 1) + (status != logits_status.reshape(status.shape))) >= 1
@@ -145,8 +145,8 @@ class Trainer(metaclass=ABCMeta):
             kl_loss = self.kl(torch.log(F.softmax(logits_masked.squeeze() / 0.1, dim=-1) + 1e-9), F.softmax(labels_masked.squeeze() / 0.1, dim=-1))
             mse_loss = self.mse(logits_masked.contiguous().view(-1),
                 labels_masked.contiguous().view(-1))
-            margin_loss = self.margin((logits_status_masked * 2 - 1).contiguous().view(-1),
-                (status_masked * 2 - 1).contiguous().view(-1).long())
+            margin_loss = self.margin((logits_status_masked * 2 - 1).contiguous().view(-1).float(),
+                (status_masked * 2 - 1).contiguous().view(-1).float())
             total_loss = kl_loss + mse_loss + margin_loss
             
             on_mask = (status >= 0) * (((status == 1) + (status != logits_status.reshape(status.shape))) >= 1)
