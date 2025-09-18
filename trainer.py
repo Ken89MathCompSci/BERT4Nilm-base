@@ -16,7 +16,8 @@ from utils import *
 import matplotlib.pyplot as plt
 
 
-torch.set_default_tensor_type(torch.DoubleTensor)
+# Use FloatTensor for better performance (32-bit instead of 64-bit)
+torch.set_default_dtype(torch.float32)
 
 
 class Trainer(metaclass=ABCMeta):
@@ -96,10 +97,10 @@ class Trainer(metaclass=ABCMeta):
             logits_status = self.compute_status(logits_energy)
 
             kl_loss = self.kl(torch.log(F.softmax(logits.squeeze() / 0.1, dim=-1) + 1e-9), F.softmax(labels.squeeze() / 0.1, dim=-1))
-            mse_loss = self.mse(logits.contiguous().view(-1).double(),
-                labels.contiguous().view(-1).double())
-            margin_loss = self.margin((logits_status * 2 - 1).contiguous().view(-1).double(), 
-                (status * 2 - 1).contiguous().view(-1).double())
+            mse_loss = self.mse(logits.contiguous().view(-1),
+                labels.contiguous().view(-1))
+            margin_loss = self.margin((logits_status * 2 - 1).contiguous().view(-1),
+                (status * 2 - 1).contiguous().view(-1))
             total_loss = kl_loss + mse_loss + margin_loss
             
             on_mask = ((status == 1) + (status != logits_status.reshape(status.shape))) >= 1
@@ -142,10 +143,10 @@ class Trainer(metaclass=ABCMeta):
             logits_status_masked = torch.masked_select(logits_status, mask).view((-1, batch_shape[-1]))
 
             kl_loss = self.kl(torch.log(F.softmax(logits_masked.squeeze() / 0.1, dim=-1) + 1e-9), F.softmax(labels_masked.squeeze() / 0.1, dim=-1))
-            mse_loss = self.mse(logits_masked.contiguous().view(-1).double(),
-                labels_masked.contiguous().view(-1).double())
-            margin_loss = self.margin((logits_status_masked * 2 - 1).contiguous().view(-1).double(), 
-                (status_masked * 2 - 1).contiguous().view(-1).double())
+            mse_loss = self.mse(logits_masked.contiguous().view(-1),
+                labels_masked.contiguous().view(-1))
+            margin_loss = self.margin((logits_status_masked * 2 - 1).contiguous().view(-1),
+                (status_masked * 2 - 1).contiguous().view(-1))
             total_loss = kl_loss + mse_loss + margin_loss
             
             on_mask = (status >= 0) * (((status == 1) + (status != logits_status.reshape(status.shape))) >= 1)
@@ -280,7 +281,7 @@ class Trainer(metaclass=ABCMeta):
                 [3100 for i in range(columns)]).to(self.device)
 
         data[data < 5] = 0
-        data = torch.min(data, self.cutoff.double())
+        data = torch.min(data, self.cutoff)
         return data
 
     def compute_status(self, data):

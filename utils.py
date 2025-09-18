@@ -52,15 +52,15 @@ def set_template(args):
         }
 
         args.threshold = {
-            'refrigerator': 50,
-            'washer_dryer': 20,
+            'refrigerator': 10,
+            'washer_dryer': 100,
             'microwave': 200,
             'dishwasher': 10
         }
 
         args.min_on = {
-            'refrigerator': 10,
-            'washer_dryer': 300,
+            'refrigerator': 5,
+            'washer_dryer': 150,
             'microwave': 2,
             'dishwasher': 300
         }

@@ -4,7 +4,8 @@ import torch
 import torch.utils.data as data_utils
 
 
-torch.set_default_tensor_type(torch.DoubleTensor)
+# Use FloatTensor for better performance (32-bit instead of 64-bit)
+torch.set_default_dtype(torch.float32)
 
 
 class NILMDataloader():
@@ -87,29 +88,29 @@ class BERTDataset(data_utils.Dataset):
         y = self.padding_seqs(self.y[start_index: end_index])
         status = self.padding_seqs(self.status[start_index: end_index])
 
-        tokens = []
-        labels = []
-        on_offs = []
+        # Pre-allocate arrays for better performance
+        tokens = np.zeros((len(x),) + x.shape[1:], dtype=np.float32)
+        labels = np.full((len(x), self.columns), -1, dtype=np.float32)
+        on_offs = np.full((len(x), self.columns), -1, dtype=np.float32)
+
         for i in range(len(x)):
             prob = random.random()
             if prob < self.mask_prob:
                 prob = random.random()
                 if prob < 0.8:
-                    tokens.append(-1)
+                    tokens[i] = -1
                 elif prob < 0.9:
-                    tokens.append(np.random.normal())
+                    tokens[i] = np.random.normal()
                 else:
-                    tokens.append(x[i])
+                    tokens[i] = x[i]
 
-                labels.append(y[i])
-                on_offs.append(status[i])
+                labels[i] = y[i]
+                on_offs[i] = status[i]
             else:
-                tokens.append(x[i])
-                temp = np.array([-1] * self.columns)
-                labels.append(temp)
-                on_offs.append(temp)
-        
-        return torch.tensor(tokens), torch.tensor(labels), torch.tensor(on_offs)
+                tokens[i] = x[i]
+                # labels and on_offs already initialized to -1
+
+        return torch.from_numpy(tokens), torch.from_numpy(labels), torch.from_numpy(on_offs)
 
     def padding_seqs(self, in_array):
         if len(in_array) == self.window_size:

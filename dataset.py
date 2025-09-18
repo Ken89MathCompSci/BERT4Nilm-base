@@ -230,13 +230,14 @@ class REDD_LF_Dataset(AbstractDataset):
                     house_data = pd.merge(
                         house_data, temp_data, how='inner', on=0)
 
+                # Convert timestamp column to datetime with proper handling
+                timestamp_col = house_data.iloc[:, 0].copy()
                 house_data.iloc[:, 0] = pd.to_datetime(
-                    house_data.iloc[:, 0], unit='s')
+                    timestamp_col, unit='s')
                 house_data.columns = ['time', 'aggregate'] + \
                     [i for i in self.appliance_names]
                 house_data = house_data.set_index('time')
-                house_data = house_data.resample(self.sampling).mean().fillna(
-                    method='ffill', limit=30)
+                house_data = house_data.resample(self.sampling).mean().ffill(limit=30)
 
                 if house_id == self.house_indicies[0]:
                     entire_data = house_data
@@ -292,12 +293,13 @@ class UK_DALE_Dataset(AbstractDataset):
 
                 house_data = pd.read_csv(house_folder.joinpath(
                     'channel_1.dat'), sep=' ', header=None)
+                # Convert timestamp column to datetime with proper handling
+                timestamp_col = house_data.iloc[:, 0].copy()
                 house_data.iloc[:, 0] = pd.to_datetime(
-                    house_data.iloc[:, 0], unit='s')
+                    timestamp_col, unit='s')
                 house_data.columns = ['time', 'aggregate']
                 house_data = house_data.set_index('time')
-                house_data = house_data.resample(self.sampling).mean().fillna(
-                    method='ffill', limit=30)
+                house_data = house_data.resample(self.sampling).mean().ffill(limit=30)
 
                 appliance_list = house_label.iloc[:, 1].values
                 app_index_dict = defaultdict(list)
@@ -326,8 +328,7 @@ class UK_DALE_Dataset(AbstractDataset):
                             temp_data.iloc[:, 0], unit='s')
                         temp_data.columns = ['time', appliance]
                         temp_data = temp_data.set_index('time')
-                        temp_data = temp_data.resample(self.sampling).mean().fillna(
-                            method='ffill', limit=30)
+                        temp_data = temp_data.resample(self.sampling).mean().ffill(limit=30)
                         house_data = pd.merge(
                             house_data, temp_data, how='inner', on='time')
 

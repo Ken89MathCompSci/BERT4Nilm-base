@@ -66,7 +66,8 @@ def fix_random_seed_as(random_seed):
     np.random.seed(random_seed)
     
 
-torch.set_default_tensor_type(torch.DoubleTensor)
+# Use FloatTensor for better performance (32-bit instead of 64-bit)
+torch.set_default_dtype(torch.float32)
 parser = argparse.ArgumentParser()
 parser.add_argument('--seed', type=int, default=12345)
 parser.add_argument('--dataset_code', type=str,
