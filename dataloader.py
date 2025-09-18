@@ -36,9 +36,9 @@ class NILMDataloader():
 
 class NILMDataset(data_utils.Dataset):
     def __init__(self, x, y, status, window_size=480, stride=30):
-        self.x = x
-        self.y = y
-        self.status = status
+        self.x = x.astype(np.float32) if hasattr(x, 'astype') else x
+        self.y = y.astype(np.float32) if hasattr(y, 'astype') else y
+        self.status = status.astype(np.float32) if hasattr(status, 'astype') else status
         self.window_size = window_size
         self.stride = stride
 
@@ -52,7 +52,7 @@ class NILMDataset(data_utils.Dataset):
         x = self.padding_seqs(self.x[start_index: end_index])
         y = self.padding_seqs(self.y[start_index: end_index])
         status = self.padding_seqs(self.status[start_index: end_index])
-        return torch.tensor(x), torch.tensor(y), torch.tensor(status)
+        return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32), torch.tensor(status, dtype=torch.float32)
 
     def padding_seqs(self, in_array):
         if len(in_array) == self.window_size:
@@ -69,9 +69,9 @@ class NILMDataset(data_utils.Dataset):
 
 class BERTDataset(data_utils.Dataset):
     def __init__(self, x, y, status, window_size=480, stride=30, mask_prob=0.2):
-        self.x = x
-        self.y = y
-        self.status = status
+        self.x = x.astype(np.float32) if hasattr(x, 'astype') else x
+        self.y = y.astype(np.float32) if hasattr(y, 'astype') else y
+        self.status = status.astype(np.float32) if hasattr(status, 'astype') else status
         self.window_size = window_size
         self.stride = stride
         self.mask_prob = mask_prob
