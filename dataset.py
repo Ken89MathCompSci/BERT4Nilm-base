@@ -232,8 +232,7 @@ class REDD_LF_Dataset(AbstractDataset):
 
                 # Convert timestamp column to datetime with proper handling
                 timestamp_col = house_data.iloc[:, 0].copy()
-                house_data.iloc[:, 0] = pd.to_datetime(
-                    timestamp_col, unit='s')
+                house_data.iloc[:, 0] = pd.to_datetime(timestamp_col, errors='coerce').astype('datetime64[ns]')
                 house_data.columns = ['time', 'aggregate'] + \
                     [i for i in self.appliance_names]
                 house_data = house_data.set_index('time')
@@ -242,14 +241,14 @@ class REDD_LF_Dataset(AbstractDataset):
                 if house_id == self.house_indicies[0]:
                     entire_data = house_data
                 else:
-                    entire_data = entire_data.append(
+                    entire_data = entire_data._append(
                         house_data, ignore_index=True)
 
-                entire_data = entire_data.dropna().copy()
-                entire_data = entire_data[entire_data['aggregate'] > 0]
-                entire_data[entire_data < 5] = 0
-                entire_data = entire_data.clip(
-                    [0] * len(entire_data.columns), self.cutoff, axis=1)
+            entire_data = entire_data.dropna().copy()
+            entire_data = entire_data[entire_data['aggregate'] > 0]
+            entire_data[entire_data < 5] = 0
+            entire_data = entire_data.clip(
+                [0] * len(entire_data.columns), self.cutoff, axis=1)
 
             return entire_data.values[:, 0], entire_data.values[:, 1:]
 
@@ -295,8 +294,7 @@ class UK_DALE_Dataset(AbstractDataset):
                     'channel_1.dat'), sep=' ', header=None)
                 # Convert timestamp column to datetime with proper handling
                 timestamp_col = house_data.iloc[:, 0].copy()
-                house_data.iloc[:, 0] = pd.to_datetime(
-                    timestamp_col, unit='s')
+                house_data.iloc[:, 0] = pd.to_datetime(timestamp_col, errors='coerce').astype('datetime64[ns]')
                 house_data.columns = ['time', 'aggregate']
                 house_data = house_data.set_index('time')
                 house_data = house_data.resample(self.sampling).mean().ffill(limit=30)
@@ -337,7 +335,7 @@ class UK_DALE_Dataset(AbstractDataset):
                     if len(self.house_indicies) == 1:
                         entire_data = entire_data.reset_index(drop=True)
                 else:
-                    entire_data = entire_data.append(
+                    entire_data = entire_data._append(
                         house_data, ignore_index=True)
 
             entire_data = entire_data.dropna().copy()
