@@ -118,7 +118,9 @@ if __name__ == "__main__":
         min_on=None,
         min_off=None,
         output_size=1,
-        mask_prob=0.25
+        mask_prob=0.25,
+        sampling='6s',  # Required by dataset
+        denom=2000      # Required by trainer
     )
 
     # Set template parameters
