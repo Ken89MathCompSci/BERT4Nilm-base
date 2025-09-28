@@ -58,7 +58,7 @@ class Trainer(metaclass=ABCMeta):
         self.mse = nn.MSELoss()
         self.margin = nn.SoftMarginLoss()
         self.l1_on = nn.L1Loss(reduction='sum')
-        self.bce = nn.BCELoss()  # More stable than SoftMarginLoss
+        self.bce = nn.BCEWithLogitsLoss()  # Handles raw logits directly, more stable than SoftMarginLoss
 
     def train(self):
         val_rel_err, val_abs_err = [], []
