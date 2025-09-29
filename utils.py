@@ -52,7 +52,7 @@ def set_template(args):
         }
 
         args.threshold = {
-            'refrigerator': 10,
+            'refrigerator': 50,  # Increased from 10W to reduce false positives
             'washer_dryer': 100,
             'microwave': 200,
             'dishwasher': 10
@@ -73,7 +73,7 @@ def set_template(args):
         }
 
         args.c0 = {
-            'refrigerator': 1e-6,
+            'refrigerator': 1e-3,  # Increased from 1e-6 for better refrigerator training
             'washer_dryer': 0.001,
             'microwave': 1.,
             'dishwasher': 1.
@@ -152,6 +152,59 @@ def acc_precision_recall_f1_score(pred, status):
         f1_scores.append(f1_score)
 
     return np.array(accs), np.array(precisions), np.array(recalls), np.array(f1_scores)
+
+
+def apply_min_on_off_constraints(status_pred, min_on, min_off):
+    """
+    Apply minimum on/off duration constraints to predicted appliance status.
+    This post-processing step helps reduce rapid state switching and improves F1 scores.
+    
+    Args:
+        status_pred: numpy array of predicted binary status (0/1)
+        min_on: minimum duration (in samples) that appliance should stay on
+        min_off: minimum duration (in samples) that appliance should stay off
+    
+    Returns:
+        numpy array of filtered status predictions
+    """
+    if status_pred.ndim == 1:
+        status_pred = status_pred.reshape(-1, 1)
+    
+    filtered_status = status_pred.copy()
+    
+    for appliance_idx in range(status_pred.shape[1]):
+        status_seq = status_pred[:, appliance_idx].copy()
+        min_on_samples = int(min_on[appliance_idx]) if hasattr(min_on, '__getitem__') else int(min_on)
+        min_off_samples = int(min_off[appliance_idx]) if hasattr(min_off, '__getitem__') else int(min_off)
+        
+        # Find state changes
+        state_changes = np.diff(status_seq.astype(int))
+        change_indices = np.where(state_changes != 0)[0] + 1
+        
+        if len(change_indices) == 0:
+            continue
+            
+        # Add start and end points
+        change_indices = np.concatenate([[0], change_indices, [len(status_seq)]])
+        
+        # Process each segment
+        for i in range(len(change_indices) - 1):
+            start_idx = change_indices[i]
+            end_idx = change_indices[i + 1]
+            segment_length = end_idx - start_idx
+            current_state = status_seq[start_idx]
+            
+            # Apply constraints
+            if current_state == 1 and segment_length < min_on_samples:
+                # ON period too short, set to OFF
+                status_seq[start_idx:end_idx] = 0
+            elif current_state == 0 and segment_length < min_off_samples:
+                # OFF period too short, set to ON
+                status_seq[start_idx:end_idx] = 1
+        
+        filtered_status[:, appliance_idx] = status_seq
+    
+    return filtered_status
 
 
 def relative_absolute_error(pred, label):

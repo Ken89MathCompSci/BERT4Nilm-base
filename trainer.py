@@ -233,6 +233,14 @@ class Trainer(metaclass=ABCMeta):
                 labels = labels_energy / self.cutoff
                 logits_energy = self.cutoff_energy(logits * self.cutoff)
                 logits_status = self.compute_status(logits_energy)
+                
+                # Apply post-processing with min_on/min_off constraints
+                logits_status_filtered = apply_min_on_off_constraints(
+                    logits_status.detach().cpu().numpy().squeeze(),
+                    self.min_on.cpu().numpy(),
+                    self.min_off.cpu().numpy()
+                )
+                logits_status = torch.tensor(logits_status_filtered).to(self.device)
                 logits_energy = logits_energy * logits_status
 
                 acc, precision, recall, f1 = acc_precision_recall_f1_score(logits_status.detach(
