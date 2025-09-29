@@ -172,10 +172,20 @@ def apply_min_on_off_constraints(status_pred, min_on, min_off):
     
     filtered_status = status_pred.copy()
     
+    # Ensure min_on and min_off are arrays
+    if not hasattr(min_on, '__getitem__'):
+        min_on = np.array([min_on])
+    if not hasattr(min_off, '__getitem__'):
+        min_off = np.array([min_off])
+    
     for appliance_idx in range(status_pred.shape[1]):
         status_seq = status_pred[:, appliance_idx].copy()
-        min_on_samples = int(min_on[appliance_idx]) if hasattr(min_on, '__getitem__') else int(min_on)
-        min_off_samples = int(min_off[appliance_idx]) if hasattr(min_off, '__getitem__') else int(min_off)
+        
+        # Handle indexing for single vs multiple appliances
+        min_on_idx = min(appliance_idx, len(min_on) - 1)
+        min_off_idx = min(appliance_idx, len(min_off) - 1)
+        min_on_samples = int(min_on[min_on_idx])
+        min_off_samples = int(min_off[min_off_idx])
         
         # Find state changes
         state_changes = np.diff(status_seq.astype(int))
