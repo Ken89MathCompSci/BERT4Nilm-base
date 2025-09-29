@@ -235,12 +235,35 @@ class Trainer(metaclass=ABCMeta):
                 logits_status = self.compute_status(logits_energy)
                 
                 # Apply post-processing with min_on/min_off constraints
-                logits_status_filtered = apply_min_on_off_constraints(
-                    logits_status.detach().cpu().numpy().squeeze(),
-                    self.min_on.cpu().numpy(),
-                    self.min_off.cpu().numpy()
-                )
-                logits_status = torch.tensor(logits_status_filtered).to(self.device)
+                # Save original shape before processing
+                original_shape = logits_status.shape
+                logits_status_np = logits_status.detach().cpu().numpy()
+                
+                # Handle different tensor shapes (batch_size, seq_len, num_appliances) or (batch_size, seq_len)
+                if logits_status_np.ndim == 3:
+                    # Shape: (batch_size, seq_len, num_appliances)
+                    batch_size, seq_len, num_appliances = logits_status_np.shape
+                    # Reshape to (batch_size * seq_len, num_appliances) for processing
+                    logits_status_flat = logits_status_np.reshape(-1, num_appliances)
+                    logits_status_filtered = apply_min_on_off_constraints(
+                        logits_status_flat,
+                        self.min_on.cpu().numpy(),
+                        self.min_off.cpu().numpy()
+                    )
+                    # Reshape back to original shape
+                    logits_status_filtered = logits_status_filtered.reshape(original_shape)
+                else:
+                    # Shape: (batch_size, seq_len) - single appliance
+                    logits_status_filtered = apply_min_on_off_constraints(
+                        logits_status_np,
+                        self.min_on.cpu().numpy(),
+                        self.min_off.cpu().numpy()
+                    )
+                    # Ensure same shape as original
+                    if logits_status_filtered.shape != original_shape:
+                        logits_status_filtered = logits_status_filtered.reshape(original_shape)
+                
+                logits_status = torch.tensor(logits_status_filtered, dtype=logits_status.dtype).to(self.device)
                 logits_energy = logits_energy * logits_status
 
                 acc, precision, recall, f1 = acc_precision_recall_f1_score(logits_status.detach(
