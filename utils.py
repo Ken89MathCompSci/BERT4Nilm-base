@@ -54,7 +54,7 @@ def set_template(args):
         args.threshold = {
             'refrigerator': 50,  # Increased from 10W to reduce false positives
             'washer_dryer': 100,
-            'microwave': 200,
+            'microwave': 50,  # Reduced from 200W to capture more microwave usage events
             'dishwasher': 10
         }
 
